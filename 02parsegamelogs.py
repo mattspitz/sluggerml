@@ -99,9 +99,12 @@ def get_feature_sets(playbyplay, lahman_shelf, game_state, base_featureset, play
 
                 # at-bat stats
                 featureset.ab_inning = inning
-                numballs, numstrikes = count[:2]
-                featureset.ab_numballs = numballs
-                featureset.ab_numstrikes = numstrikes
+                try:
+                    numballs, numstrikes = count[:2]
+                    featureset.ab_numballs = numballs
+                    featureset.ab_numstrikes = numstrikes
+                except Exception:
+                    pass
 
                 # TODO: keep track of outs, runners on?
 
