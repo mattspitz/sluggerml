@@ -4,7 +4,8 @@
 # input: Master.csv filename from the Lahman data set (http://seanlahman.com/files/database/readme59.txt), python shelf filename for data
 # output: (none)
 
-import re
+from common import csv_split
+
 import shelve
 import sys
 
@@ -16,10 +17,7 @@ def process_master_file(shelf_fn, master_fn):
         if i == 0:
             schema = line.split(",")
         else:
-            # there's gotta be a better way to do this
-            values = []
-            line_regex = re.compile(r'((?:".*?")|.*?)(?:,|$)')
-            values = line_regex.findall(line)[:-1]
+            values = csv_split(line)
 
             if len(values) != len(schema):
                 raise Exception("Line mismatch: expected %d values, got %d.  Schema:\n%s\nLine:\n%s" % (len(schema), len(values), ",".join(schema), line))

@@ -1,4 +1,5 @@
 import json
+import re
 
 class Label(object):
     HR = "HR"
@@ -109,3 +110,11 @@ class FeatureSet(object):
                              "debut",
                              "college"]:
             setattr(self, "%s_%s" % (prefix, lahman_field), getattr(player_state, "lahman_%s" % lahman_field))
+
+line_regex = re.compile(r'((?:".*?")|.*?)(?:,|$)')
+def csv_split(line):
+    # there's gotta be a better way to do this
+    values = line_regex.findall(line)
+    if not line.endswith(","):
+        return values[:-1]
+    return values
