@@ -9,7 +9,7 @@ import re
 import shelve
 import sys
 
-from common import FeatureSet, GameState, PlayerState, Label
+from common import FeatureSet, GameState, PlayerState, Label, csv_split
 
 def parse_header(header):
     game_state = GameState()
@@ -18,7 +18,11 @@ def parse_header(header):
     for line in header.split("\n"):
         line = line.strip()
         if line.startswith("info,"):
-            _, key, value = line.split(",")
+            try:
+                _, key, value = csv_split(line)
+            except Exception:
+                logging.error("Choked on line: %s" % line)
+                raise
 
             if key in ["visteam", "hometeam"]:
                 setattr(GameState, key, value)
@@ -31,7 +35,11 @@ def parse_header(header):
 
 def add_player_state(line, lahman_shelf, game_state, state_by_id):
     # note, this doesn't keep track of who gets subbed out, just the latest state for each player
-    _, retrosheetid, name, team, batpos, fieldpos = line.split(",")
+    try:
+        _, retrosheetid, name, team, batpos, fieldpos = csv_split(line)
+    except Exception:
+        logging.error("Choked on line: %s" % line)
+        raise
 
     player_state = PlayerState()
     player_state.retrosheetid = retrosheetid
@@ -70,7 +78,11 @@ def get_feature_sets(playbyplay, lahman_shelf, game_state, base_featureset, play
             add_player_state(line, lahman_shelf, game_state, player_state_by_id)
 
         elif line.startswith("play"):
-            _, inning, visorhome, retrosheetid, count, pitches, play = line.split(",")
+            try:
+                _, inning, visorhome, retrosheetid, count, pitches, play = csv_split(line)
+            except Exception:
+                logging.error("Choked on line: %s" % line)
+                raise
 
             if any( play.startswith(ignore) for ignore in ["NP"] ):
                 continue
@@ -87,7 +99,7 @@ def get_feature_sets(playbyplay, lahman_shelf, game_state, base_featureset, play
 
                 # at-bat stats
                 featureset.ab_inning = inning
-                numballs, numstrikes = count
+                numballs, numstrikes = count[:2]
                 featureset.ab_numballs = numballs
                 featureset.ab_numstrikes = numstrikes
 
@@ -127,7 +139,11 @@ def parse_ev(lahman_shelf, ev_fn):
     game_regex = re.compile(r"(\s|^)id,(.*?)(?=((\s|^)id,|$))", re.DOTALL)
 
     for match in game_regex.finditer(open(ev_fn).read()):
-        parse_game(lahman_shelf, match.group(0).strip())
+        try:
+            parse_game(lahman_shelf, match.group(0).strip())
+        except Exception:
+            logging.error("Choked on fn: %s" % ev_fn)
+            raise
 
 def main():
     lahman_shelf = shelve.open(sys.argv[1], flag='r')
