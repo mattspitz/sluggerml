@@ -8,7 +8,9 @@ class Label(object):
 class GameState(object):
     __slots__ = [
         "visteam",
-        "hometeam"
+        "hometeam",
+        "visteam_pitcherid",
+        "hometeam_pitcherid"
         ]
 
     def __str__(self):
@@ -29,15 +31,14 @@ class PlayerState(object):
                     "finalGame",
                     "college"]
 
-    __slots__ = [
-        "retrosheetid",
-        "visorhome",
-        "team",
-        "name",
-        "fieldpos",
-        "batpos"
-        ] + \
-        [ "lahman_%s" % stat for stat in lahman_stats ]
+    player_stats = ["retrosheetid",
+                    "visorhome",
+                    "team",
+                    "name",
+                    "fieldpos",
+                    "batpos"]
+    __slots__ = player_stats \
+        + [ "lahman_%s" % stat for stat in lahman_stats ]
 
     def __str__(self):
         return "<PlayerState: %s>" % ", ".join([ "%s=%s" % (slot, getattr(self, slot, None)) for slot in self.__slots__ ])
@@ -60,17 +61,10 @@ class FeatureSet(object):
         "ab_numballs",
         "ab_numstrikes",
 
-        # player stats
-        "player_fieldpos",
-        "player_batpos",
-        "player_team",
-        "player_visorhome",
-        "player_retrosheetid",
-
         # label
-        "label"
-        ] + \
-        [ "player_%s" % stat for stat in PlayerState.lahman_stats ]
+        "label" ] \
+        + [ "batter_%s" % stat for stat in (PlayerState.player_stats + PlayerState.lahman_stats) ] \
+        + [ "pitcher_%s" % stat for stat in (PlayerState.player_stats + PlayerState.lahman_stats) ]
 
     def __str__(self):
         return self.to_json()
@@ -92,9 +86,15 @@ class FeatureSet(object):
         assert(new_obj.to_json() == self.to_json())
         return new_obj
 
-    def add_player_info(self, player_state):
+    def add_batter_info(self, batter_state):
+        self.add_player_info(batter_state, "batter")
+
+    def add_pitcher_info(self, pitcher_state):
+        self.add_player_info(pitcher_state, "pitcher")
+
+    def add_player_info(self, player_state, prefix):
         for field in ["fieldpos", "batpos", "team", "visorhome", "retrosheetid"]:
-            setattr(self, "player_%s" % field, getattr(player_state, field))
+            setattr(self, "%s_%s" % (prefix, field), getattr(player_state, field))
 
         for lahman_field in ["birthYear",
                              "birthMonth",
@@ -108,4 +108,4 @@ class FeatureSet(object):
                              "throws",
                              "debut",
                              "college"]:
-            setattr(self, "player_%s" % lahman_field, getattr(player_state, "lahman_%s" % lahman_field))
+            setattr(self, "%s_%s" % (prefix, lahman_field), getattr(player_state, "lahman_%s" % lahman_field))

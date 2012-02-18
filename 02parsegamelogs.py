@@ -41,6 +41,10 @@ def add_player_state(line, lahman_shelf, game_state, state_by_id):
     player_state.batpos = batpos
     player_state.fieldpos = fieldpos
 
+    # update for pitcher changes
+    if fieldpos == "1":
+        setattr(game_state, "%s_pitcherid" % player_state.visorhome, retrosheetid)
+
     if retrosheetid in lahman_shelf:
         lahman_stats = lahman_shelf[retrosheetid]
         for lahman_key in PlayerState.lahman_stats:
@@ -74,8 +78,12 @@ def get_feature_sets(playbyplay, lahman_shelf, game_state, base_featureset, play
             try:
                 featureset = base_featureset.copy()
 
-                # player
-                featureset.add_player_info(player_state_by_id[retrosheetid])
+                # player info
+                featureset.add_batter_info(player_state_by_id[retrosheetid])
+
+                # make sure to select the OPPOSITE pitcher from the current batter
+                game_state_key = "%s_pitcherid" % ("visteam" if visorhome == "1" else "hometeam")
+                featureset.add_pitcher_info(player_state_by_id[getattr(game_state, game_state_key)])
 
                 # at-bat stats
                 featureset.ab_inning = inning
