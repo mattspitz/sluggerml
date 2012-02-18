@@ -1,13 +1,15 @@
 #!/usr/bin/python
 
-# input: filename(s) in EVA/EVN format
+# input: python shelf filename from Lahman dataset (see 01readlahmanplayerstats.py), filename(s) in EVA/EVN format
 # output: training set representing labelled situations
 
-from common import FeatureSet, GameState, PlayerState, Label
 import json
 import logging
 import re
+import shelve
 import sys
+
+from common import FeatureSet, GameState, PlayerState, Label
 
 def parse_header(header):
     game_state = GameState()
@@ -27,7 +29,7 @@ def parse_header(header):
 
     return game_state, base_featureset
 
-def add_player_state(line, game_state, state_by_id):
+def add_player_state(line, lahman_shelf, game_state, state_by_id):
     # note, this doesn't keep track of who gets subbed out, just the latest state for each player
     _, retrosheetid, name, team, batpos, fieldpos = line.split(",")
 
@@ -39,24 +41,29 @@ def add_player_state(line, game_state, state_by_id):
     player_state.batpos = batpos
     player_state.fieldpos = fieldpos
 
+    if retrosheetid in lahman_shelf:
+        lahman_stats = lahman_shelf[retrosheetid]
+        for lahman_key in PlayerState.lahman_stats:
+            setattr(player_state, "lahman_%s" % lahman_key, lahman_stats[lahman_key])
+
     state_by_id[retrosheetid] = player_state
 
-def parse_players(players, game_state):
+def parse_players(players, lahman_shelf, game_state):
     state_by_id = {}
 
     for line in players.split("\n"):
         line = line.strip()
         if line.startswith("start,"):
-            add_player_state(line, game_state, state_by_id)
+            add_player_state(line, lahman_shelf, game_state, state_by_id)
 
     return state_by_id
 
-def get_feature_sets(playbyplay, game_state, base_featureset, player_state_by_id):
+def get_feature_sets(playbyplay, lahman_shelf, game_state, base_featureset, player_state_by_id):
     for line in playbyplay.split("\n"):
         line = line.strip()
 
         if line.startswith("sub"):
-            add_player_state(line, game_state, player_state_by_id)
+            add_player_state(line, lahman_shelf, game_state, player_state_by_id)
 
         elif line.startswith("play"):
             _, inning, visorhome, retrosheetid, count, pitches, play = line.split(",")
@@ -88,7 +95,7 @@ def get_feature_sets(playbyplay, game_state, base_featureset, player_state_by_id
 
                 yield featureset
             except Exception:
-                logging.exception("Choked on line: %s" % line)
+                logging.error("Choked on line: %s" % line)
                 raise
 
 def get_game_sections(game):
@@ -99,26 +106,25 @@ def get_game_sections(game):
                                 re.DOTALL | re.MULTILINE)
     return sections_regex.match(game)
 
-def parse_game(game):
+def parse_game(lahman_shelf, game):
     sections = get_game_sections(game)
 
     game_state, base_featureset = parse_header(sections.group("header"))
-    player_state_by_id = parse_players(sections.group("players"), game_state)
+    player_state_by_id = parse_players(sections.group("players"), lahman_shelf, game_state)
 
-    for feature_set in get_feature_sets(sections.group("playbyplay"), game_state, base_featureset, player_state_by_id):
+    for feature_set in get_feature_sets(sections.group("playbyplay"), lahman_shelf, game_state, base_featureset, player_state_by_id):
         print feature_set
 
-def parse_ev(ev_fn):
+def parse_ev(lahman_shelf, ev_fn):
     game_regex = re.compile(r"(\s|^)id,(.*?)(?=((\s|^)id,|$))", re.DOTALL)
 
-    num = 1
-    for i, match in enumerate(game_regex.finditer(open(ev_fn).read())):
-        if i < num:
-            parse_game(match.group(0))
+    for match in game_regex.finditer(open(ev_fn).read()):
+        parse_game(lahman_shelf, match.group(0).strip())
 
 def main():
-    for fn in sys.argv[1:]:
-        parse_ev(fn)
+    lahman_shelf = shelve.open(sys.argv[1], flag='r')
+    for fn in sys.argv[2:]:
+        parse_ev(lahman_shelf, fn)
 
 if __name__ == "__main__":
     main()
