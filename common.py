@@ -109,7 +109,8 @@ class FeatureSet(object):
                              "throws",
                              "debut",
                              "college"]:
-            setattr(self, "%s_%s" % (prefix, lahman_field), getattr(player_state, "lahman_%s" % lahman_field))
+            if hasattr(player_state, "lahman_%s" % lahman_field):
+                setattr(self, "%s_%s" % (prefix, lahman_field), getattr(player_state, "lahman_%s" % lahman_field))
 
 line_regex = re.compile(r'((?:".*?")|.*?)(?:,|$)')
 def csv_split(line):
