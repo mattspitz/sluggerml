@@ -298,6 +298,9 @@ class TrainingDatum(object):
     def __str__(self):
         return "<TrainingDatum: %s>" % ", ".join([ "%s=%s" % (k, getattr(self, k)) for k in sorted(self.__slots__) ])
 
+    def to_json(self):
+        return json.dumps(dict([ (slot, getattr(self,slot)) for slot in self.__slots__ ]))
+
 line_regex = re.compile(r'((?:".*?")|.*?)(?:,|$)')
 def csv_split(line):
     # there's gotta be a better way to do this
@@ -305,9 +308,3 @@ def csv_split(line):
     if not line.endswith(","):
         return values[:-1]
     return values
-
-if __name__ == "__main__":
-    import sys
-    for line in sys.stdin:
-        print line.strip()
-        print TrainingDatum.from_featureset_json(line.strip())
