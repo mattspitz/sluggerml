@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
-# input: output filename, training set filename(s)
-# output: all possible feature / value pairs
+# input: output filename, training set filename
+# output: all possible feature / value pairs in that training set
 
 import json
 import sys
@@ -9,14 +9,12 @@ import sys
 from common import TrainingDatum
 
 def main():
-    output_fn, tdata_fns = sys.argv[1], sys.argv[2:]
+    output_fn, tdata_fn = sys.argv[1], sys.argv[2]
     all_features = {}
-    for fn in tdata_fns:
-        print "processing", fn
-        for line in open(fn):
-            td = json.loads(line.strip())
-            for fname, fval in td.iteritems():
-                all_features.setdefault(fname, set()).add(fval)
+    for line in open(tdata_fn):
+        td = json.loads(line.strip())
+        for fname, fval in td.iteritems():
+            all_features.setdefault(fname, set()).add(fval)
 
     for k in td:
         all_features[k] = sorted(all_features[k])
