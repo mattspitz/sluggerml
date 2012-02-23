@@ -78,7 +78,6 @@ class Features2IndicesByValue(Features2Indices):
         return self.indices2features[idx]
 
 def print_significant_features(p_values, feature_mapper, start_year, end_year):
-    print "=== significant features from %d to %d ===" % (start_year, end_year)
     best_indices = sorted(range(len(p_values)),
                           key=(lambda x: p_values[x]))
     lines = []
