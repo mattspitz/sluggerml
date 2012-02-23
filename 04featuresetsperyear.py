@@ -14,9 +14,10 @@ def main():
     for line in open(tdata_fn):
         td = json.loads(line.strip())
         for fname, fval in td.iteritems():
-            all_features.setdefault(fname, set()).add(fval)
+            if fname != "label":
+                all_features.setdefault(fname, set()).add(fval)
 
-    for k in td:
+    for k in all_features:
         all_features[k] = sorted(all_features[k])
 
     json.dump(all_features, open(output_fn, 'w'))
