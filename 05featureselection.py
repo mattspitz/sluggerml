@@ -145,14 +145,15 @@ def get_feature_mapper(start_year, end_year, feature_mapper_clss):
     return feature_mapper_clss(featuresets)
 
 def main():
-    start_year, end_year, predicted_label, feature_type = int(sys.argv[1]), int(sys.argv[2]), sys.argv[3], sys.argv[4]
+    start_year, end_year, predicted_label, feature_type, selection_type = int(sys.argv[1]), int(sys.argv[2]), sys.argv[3], sys.argv[4], sys.argv[5]
 
     feature_mapper_clss = {"name": Features2IndicesByFeature, "nameval": Features2IndicesByValue}[feature_type]
+    selection_fn = {"chi2": univariate_selection.chi2, "anova": univariate_selection.f_classif}[selection_type]
 
     feature_mapper = get_feature_mapper(start_year, end_year, feature_mapper_clss)
     value_array, labels = get_feature_array(start_year, end_year, feature_mapper, predicted_label)
 
-    _, p_values = univariate_selection.chi2(value_array, labels)
+    _, p_values = selection_fn(value_array, labels)
     print_significant_features(p_values, feature_mapper, start_year, end_year)
 
 if __name__ == "__main__":
