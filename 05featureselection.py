@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
-# input: beginning and ending year (e.g. 1996 2011)
-# output: ?
+# input: beginning and ending year (e.g. 1996 2011), label to predict, feature type, algorithm
+# output: p-independence for all features
 
 import json
 import os
