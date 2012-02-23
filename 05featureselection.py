@@ -5,6 +5,7 @@
 
 import json
 import os
+import multiprocessing
 import sys
 import time
 
@@ -71,14 +72,13 @@ class Features2IndicesByValue(Features2Indices):
             fname = self.get_fname(k, v)
             idx = self.features2indices[fname]
             lst[idx] = 1
-        return lst
+        return numpy.array(lst)
 
     def get_feature_name(self, idx):
         return self.indices2features[idx]
 
-def print_significant_features(p_values, feature_mapper):
-    print
-    print "=== significant features ==="
+def print_significant_features(p_values, feature_mapper, start_year, end_year):
+    print "=== significant features from %d to %d===" % (start_year, end_year)
     best_indices = sorted(range(len(p_values)),
                           key=(lambda x: p_values[x]))
     lines = []
@@ -89,39 +89,49 @@ def print_significant_features(p_values, feature_mapper):
     for fname, val in lines:
         print fname.ljust(max_width_by_col[0]), "\t", val.ljust(max_width_by_col[1])
 
+def _read_file(args):
+    fn, params, functions = args[0], args[1], args[2:]
+    results = []
+    for line in open(fn):
+        results.append([ f(line.strip(), **params) for f in functions ])
+    return results
+
+def _get_label(line, **kwargs):
+    return 1 if json.loads(line)["label"] == kwargs["predicted_label"] else 0
+
+def _make_arr(line, **kwargs):
+    return kwargs["feature_mapper"].make_feature_array(json.loads(line))
+
+def _noop(line, **kwargs):
+    pass
+
 def get_feature_array(start_year, end_year, feature_mapper, predicted_label):
-    def tdata_gen(functions, print_progress=False):
-        for year in range(start_year, end_year + 1):
-            fn = os.path.join("data", "training", "%d.tdata" % year)
+    pool = multiprocessing.Pool(processes=(multiprocessing.cpu_count()-1))
 
-            if print_progress:
-                start = time.time()
-                print fn, "...",
+    try:
+        def send_to_pool(args):
+            return itertools.chain(*pool.imap(_read_file, args, chunksize=1))
 
-            for line in open(fn):
-                yield ( f(line.strip()) for f in functions )
+        filenames = [ os.path.join("data", "training", "%d.tdata" % year) for year in range(start_year, end_year + 1) ]
+        args = [ (fn, {}, _noop) for fn in filenames ]
 
-            if print_progress:
-                print "done (%0.4f seconds)" % (time.time()-start)
+        num_lines = sum( 1 for _ in enumerate(send_to_pool(args)) )
 
-    def make_arr(line):
-        return feature_mapper.make_feature_array(json.loads(line))
+        value_array = numpy.zeros( (num_lines, feature_mapper.get_num_features()) )
+        labels = numpy.zeros(num_lines)
 
-    num_lines = 0
-    # rip through all data points once to build up the array (prevents keeping all objects in memory)
-    for _, in tdata_gen( (lambda x: 1,) ):
-        num_lines += 1
+        kwargs = {"feature_mapper": feature_mapper, "predicted_label": predicted_label}
+        args = [ (fn, kwargs, _make_arr, _get_label) for fn in filenames ]
 
-    value_array = numpy.zeros( (num_lines, feature_mapper.get_num_features()) )
-    labels = numpy.zeros(num_lines)
+        # rip through all data points again, this time populating the array
+        for i, (val_arr, label) in enumerate(send_to_pool(args)):
+            for j in xrange(len(val_arr)):
+                value_array[i][j] = val_arr[j]
+            labels[i] = label
 
-    # rip through all data points again, this time populating the array
-    for i, (val_arr, label) in enumerate(tdata_gen([make_arr, lambda ln: 1 if json.loads(ln)["label"] == predicted_label else 0], print_progress=True)):
-        for j in xrange(len(val_arr)):
-            value_array[i][j] = val_arr[j]
-        labels[i] = label
-
-    return value_array, labels
+        return value_array, labels
+    finally:
+        pool.close()
 
 def get_feature_mapper(start_year, end_year, feature_mapper_clss):
     # grabs all possible features for a given start/end year and maps all keys and values to integers for arrays
@@ -144,7 +154,7 @@ def main():
     value_array, labels = get_feature_array(start_year, end_year, feature_mapper, predicted_label)
 
     _, p_values = univariate_selection.chi2(value_array, labels)
-    print_significant_features(p_values, feature_mapper)
+    print_significant_features(p_values, feature_mapper, start_year, end_year)
 
 if __name__ == "__main__":
     main()
