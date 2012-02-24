@@ -1,7 +1,10 @@
 import datetime
 import json
 import logging
+import pickle
 import re
+
+import nltk
 
 UNK = "<UNK>"
 
@@ -9,6 +12,10 @@ class Label(object):
     HR = "HR"
     K = "K"
     OTHER = "OTHER"
+
+    @classmethod
+    def get_all(cls):
+        return [ k for k in dir(cls) if not k.startswith("_") and k != "get_all" ]
 
 class GameState(object):
     __slots__ = [
@@ -308,3 +315,12 @@ def csv_split(line):
     if not line.endswith(","):
         return values[:-1]
     return values
+
+def dump_bayes_to_file(bayes_classifier, filename):
+    pickle.dump({"_label_probdist": bayes_classifier._label_probdist,
+                 "_feature_probdist": bayes_classifier._feature_probdist},
+                open(filename, "w"))
+
+def load_bayes_from_file(filename):
+    d = pickle.load(open(filename))
+    return nltk.NaiveBayesClassifier(d["_label_probdist"], d["_feature_probdist"])
