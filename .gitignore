@@ -1,1 +1,7 @@
 *.pyc
+
+serve/logs/*.log
+serve/nginx.pid
+
+output/
+data/
