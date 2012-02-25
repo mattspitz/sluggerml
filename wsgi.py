@@ -15,11 +15,17 @@ def get_all_features(args):
         # pedantic note: I could do this in one line, but that would be wrong.
         ALL_FEATURES = []
         for fname, valdict in json.load(open(HISTOGRAM_FN)).iteritems():
+
             if fname != "label":
-                print valdict.keys()
+                def keyfn(x):
+                    # gah, pesky numeric values
+                    if x.startswith("[") and x.endswith(")"): return int(re.match("\[(-?\d+)-\d+\)", x).group(1))
+                    if x.endswith("+"): return int(x[:-1])
+                    return x
+
                 tpl = (fname,
                        sorted([ k for k in valdict.keys() if k != UNK ],
-                              key=(lambda x: int(re.match("\[(-?\d+)-\d+\)", x).group(1)) if (x.startswith("[") and x.endswith(")")) else x)))
+                              key=keyfn))
                 ALL_FEATURES.append(tpl)
 
         ALL_FEATURES.sort()
@@ -32,7 +38,7 @@ def get_response(args):
     response_map = {"features": get_all_features}
     unspecified = (lambda x: {"error": "specify 'type'"})
 
-    fn = response_map.get(args.get("t"), unspecified)
+    fn = response_map.get(args.pop("t", None), unspecified)
     return fn(args)
 
 # WSGI funtimes
