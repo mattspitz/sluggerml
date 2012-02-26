@@ -1,5 +1,4 @@
 $(function() {
-	console.log("jquery online.");
 	setupInputs();
 });
 
@@ -16,7 +15,7 @@ function addFeatureSelector(allFeatures) {
 
 	var existingFeatures = {}
 	$.each($("#userinput select.feature"), function(idx, select) {
-			existingFeatures[select.val()] = 1;
+			existingFeatures[$(select).val()] = 1;
 		});
 
 	console.log(existingFeatures);
@@ -64,15 +63,13 @@ function addFeatureSelector(allFeatures) {
 				.appendTo($featureSelector);
 		});
 
-	var featureWrapper = document.createElement("div");
-	var valueWrapper = document.createElement("div");
+	var $featureWrapper = $(document.createElement("span")).addClass("feature");
+	var $valueWrapper = $(document.createElement("span"));
 
 	$featureSelector
 		.addClass("feature")
 		.change(function() {
-				console.log($featureSelector.val());
-
-				var $valueSelector = $(document.createElement("select"));
+				var $valueSelector = $(document.createElement("select")).addClass("value");
 				$.each(featureMap[$featureSelector.val()], function(idx, val) {
 						var option = document.createElement("option");
 						option.value = val;
@@ -80,26 +77,67 @@ function addFeatureSelector(allFeatures) {
 							.html(val)
 							.appendTo($valueSelector);
 					});
-				$(valueWrapper)
+				$valueWrapper
 					.empty()
 					.append($valueSelector);
+
+				/* have to call chosen after it's appended to the dom */
+				$valueSelector.chosen();
 			})
-		.appendTo(featureWrapper);
+		.appendTo($featureWrapper);
+
+	var chooser = document.createElement("div");
+
+	var $subtractor = $(document.createElement("span"))
+		.addClass("subtractor")
+		.html('<a href="#">-</a>')
+		.click(function() {
+				$(chooser).remove();
+			});
 
 	/* TODO add buttons for more/fewer features (automatic?) */
 
-	$(document.createElement("div"))
-		.append(featureWrapper)
-		.append(valueWrapper)
-		.appendTo("#userinput");
+	$(chooser)
+		.addClass("chooser")
+		.append($subtractor)
+		.append($featureWrapper)
+		.append($valueWrapper)
+		.appendTo("#userinput .features");
 
 	$featureSelector.chosen();
 }
 
+function submitQuery() {
+	var query = {};
+	$.each($("#userinput .features .chooser"), function(idx, elem) {
+			var feature = $(elem).find("select.feature").val();
+			if (feature) {
+				query[feature] = $(elem).find("select.value").val();
+			}
+		});
+
+	$.getJSON("/cmd?type=predict",
+			  query,
+			  function(data) {
+				  console.log("response", data);
+				  /* TODO draw stuff */
+			  });
+}
+
 function setupInputs() {
-	$.getJSON("/cmd?t=features",
-			  function (data, response) {
+	$.getJSON("/cmd?type=features",
+			  function (data) {
 				  addFeatureSelector(data["features"]);
+				  $("#userinput .adder")
+					  .click(function(e){
+							  e.preventDefault();
+							  addFeatureSelector(data["features"]);
+						  });
+				  $("#userinput .submit")
+					  .click(function(e){
+							  e.preventDefault();
+							  submitQuery();
+						  });
 			  });
 }
 

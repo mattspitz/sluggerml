@@ -1,14 +1,14 @@
 
-from cgi import parse_qs
+from cgi import FieldStorage, parse_qs
 import json
 import re
 
 from common import load_bayes_from_file, UNK
 
-PREDICTOR_LABELS = ["HR", "K"]
+PREDICTOR_LABELS = ["HR", "K", "OTHER"]
 HISTOGRAM_FN = "output/histogram_1980-2011.json"
 ALL_FEATURES = None
-def get_all_features(args):
+def get_all_features(args, post_data):
     global ALL_FEATURES
 
     if ALL_FEATURES is None:
@@ -32,23 +32,46 @@ def get_all_features(args):
 
     return {"features": ALL_FEATURES}
 
+def predict_bundle(args, post_data):
+    # this is a silly hack because qs args are coming through to the post data and I'm too lazy to figure out why
+    d = dict( (k, post_data[k].value) for k in post_data if k != "type" )
+
+    response = {"bundle": {},
+                "baseline": {}}
+    probdist = CLASSIFIER.prob_classify(d)
+    baseline_probdist = CLASSIFIER.prob_classify({})
+    for label in PREDICTOR_LABELS:
+        response["bundle"][label] = probdist.prob(label)
+        response["baseline"][label] = baseline_probdist.prob(label)
+
+    return response
+
 BAYES_FN = "output/bayes_1980-2011.json"
 CLASSIFIER = load_bayes_from_file(BAYES_FN)
-def get_response(args):
-    response_map = {"features": get_all_features}
-    unspecified = (lambda x: {"error": "specify 'type'"})
+def get_response(args, post_data):
+    response_map = {"features": get_all_features,
+                    "predict": predict_bundle}
+    unspecified = (lambda x,y: {"error": "specify 'type'"})
 
-    fn = response_map.get(args.pop("t", None), unspecified)
-    return fn(args)
+    fn = response_map.get(args.pop("type", None), unspecified)
+    return fn(args, post_data)
 
 # WSGI funtimes
 def get_args(environ):
     # just use the first argument for each key provided
     return dict(( (k, v[0]) for k,v in parse_qs(environ["QUERY_STRING"]).iteritems() ))
 
+def get_post_data(environ):
+    post_data = environ.copy()
+    return FieldStorage(
+        fp=environ['wsgi.input'],
+        environ=post_data,
+        keep_blank_values=True)
+
 def application(environ, start_response):
     args = get_args(environ)
-    response = json.dumps(get_response(args))
+    post_data = get_post_data(environ)
+    response = json.dumps(get_response(args, post_data))
 
     headers = [ ("Content-Type", "application/json"),
                 ("Content-Length", len(response)) ]

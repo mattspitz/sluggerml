@@ -1,0 +1,20 @@
+a {
+	color: blue;
+	text-decoration: none;
+}
+
+#userinput .chooser {
+	padding: 10px 10px 0 20px;
+
+}
+#userinput .chooser span {
+	padding-right: 10px;
+}
+
+#userinput select.feature {
+	width: 200px;
+}
+
+#userinput select.value {
+	width: 100px;
+}
