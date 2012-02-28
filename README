@@ -2,7 +2,7 @@ SluggerML- baseball stats!
 
 Using datasets from retrosheet.org and seanlahman.com/baseball-archive/statistics.
 
-Depends on scikit-learn and python-nltk.
+Depends on scikit-learn and python-nltk (and reportlab if you're building reports).
 
 On Debian, requires the following to build the aforementioned:
 python-dev
