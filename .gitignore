@@ -5,3 +5,4 @@ serve/nginx.pid
 
 output/
 data/
+charts/
