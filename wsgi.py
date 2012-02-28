@@ -18,6 +18,10 @@ def get_all_features(args, post_data):
 
             if fname != "label":
                 def keyfn(x):
+                    try:
+                        return int(x)
+                    except Exception:
+                        pass
                     # gah, pesky numeric values
                     if x.startswith("[") and x.endswith(")"): return int(re.match("\[(-?\d+)-\d+\)", x).group(1))
                     if x.endswith("+"): return int(x[:-1])
