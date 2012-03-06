@@ -78,10 +78,9 @@ def build_chart(feature_name, data, category_names, output_dir):
 def build_csv(feature_name, data, category_names, output_dir):
     out_csv = csv.writer(open(os.path.join(output_dir, feature_name + ".csv"), "w"))
 
-    out_csv.writerow(["Feature / Likelihood Index", "HR", "K"])
-
-    for i, fval in enumerate(category_names):
-        out_csv.writerow([ fval, data[0][i], data[1][i] ])
+    out_csv.writerow([""] + category_names)
+    out_csv.writerow(["HR"] + data[0])
+    out_csv.writerow(["K"] + data[1])
 
 def dump_feature(feature_name, value_dict, output_dir):
     # drop insignificant features
