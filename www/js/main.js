@@ -9,9 +9,39 @@ function addFeatureSelector(allFeatures) {
 						"pitcher": "Pitcher"};
 	var groupOrder = ["game", "ab", "batter", "pitcher"];
 
-	var displayMap = {"ab_inning": "Inning"} //TODO populate
+	var displayMap = {
+		"game_daynight": "Game: Day/Night",
+		"game_month": "Game: Month",
+		"game_number": "Game: First/Doubleheader",
+		"game_site": "Game: Site",
+		"game_temp": "Game: Temperature",
+		"game_winddir": "Game: Wind Direction",
+		"game_year": "Game: Year",
 
+		"ab_inning": "Inning",
+		"ab_lrmatchup": "Lefty-righty Matchup",
+		"ab_numballs": "Number of Balls",
+		"ab_numstrikes": "Number of Strikes",
 
+		"batter_age": "Batter: Age",
+		"batter_batpos": "Batter: Lineup Position",
+		"batter_bats": "Batter: Bats",
+		"batter_birthCountry": "Batter: Birth Country",
+		"batter_experience": "Batter: Experience (Years)",
+		"batter_fieldpos": "Batter: Fielding Position",
+		"batter_height": "Batter: Height (Inches)",
+		"batter_team": "Batter: Team",
+		"batter_throws": "Batter: Throws",
+		"batter_visorhome": "Batter: Home/Visitor",
+		"batter_weight": "Batter: Weight",
+
+		"pitcher_age": "Pitcher: Age",
+		"pitcher_birthCountry": "Pitcher: Birth Country",
+		"pitcher_experience": "Pitcher: Experience (Years)",
+		"pitcher_height": "Pitcher: Height (Inches)",
+		"pitcher_team": "Pitcher: Team",
+		"pitcher_throws": "Pitcher: Throws",
+		"pitcher_weight": "Pitcher: Weight"}
 
 	var existingFeatures = {}
 	$.each($("#userinput select.feature"), function(idx, select) {
