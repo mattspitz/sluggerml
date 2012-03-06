@@ -9,16 +9,16 @@ import os.path
 import re
 import sys
 
-from reportlab.graphics.shapes import Drawing, String
-from reportlab.graphics.charts.barcharts import VerticalBarChart
-from reportlab.graphics.charts.legends import Legend
-from reportlab.graphics.charts.textlabels import Label
-from reportlab.lib import colors
-from reportlab.lib.validators import Auto
-
 from common import UNK
 
 def build_chart(feature_name, data, category_names, output_dir):
+    from reportlab.graphics.shapes import Drawing, String
+    from reportlab.graphics.charts.barcharts import VerticalBarChart
+    from reportlab.graphics.charts.legends import Legend
+    from reportlab.graphics.charts.textlabels import Label
+    from reportlab.lib import colors
+    from reportlab.lib.validators import Auto
+
     # build chart and save it
     d = Drawing(800, 600)
     d.add(String(200,180,feature_name), name='title')
