@@ -3,10 +3,22 @@ a {
 	text-decoration: none;
 }
 
-#userinput .chooser {
-	padding: 10px 10px 0 20px;
-
+#header {
+	padding-bottom: 10px;
 }
+
+#userinput .adder {
+	padding-bottom: 5px;
+}
+
+#userinput .submit {
+	padding-bottom: 5px;
+}
+
+#userinput .chooser {
+	padding: 5px 10px 5px 20px;
+}
+
 #userinput .chooser span {
 	padding-right: 10px;
 }
