@@ -2,16 +2,39 @@ $(function() {
 	setupInputs();
 });
 
-function drawChart(baseline, bundle) {
+function drawPieCharts(baseline, bundle) {
+	$.each({"#baseline_chart": {"vals": baseline, "title": "Baseline Probability"},
+				"#features_chart": {"vals": bundle, "title": "Featureset Probability"}},
+		function(selector, d) {
+
+			var data = new google.visualization.DataTable();
+			data.addColumn("string", "Action");
+			data.addColumn("number", "P(Action)");
+			data.addRows([
+				  ["Home Run", d["vals"]["HR"]],
+				  ["Strikeout", d["vals"]["K"]],
+				  ["(other)", 1.0 - Math.min(1.0, (d["vals"]["HR"] + d["vals"]["K"]))]
+						  ]);
+
+			var options = {
+				title: d["title"]
+			};
+
+			var chart = new google.visualization.PieChart($(selector)[0]);
+			chart.draw(data, options);
+		});
+}
+
+function drawColumnChart(baseline, bundle) {
 	var data = new google.visualization.DataTable();
 
 	data.addColumn("string", "Label");
-	data.addColumn("number", "Correlation");
+	data.addColumn("number", "Correlation Index");
 
 	var HR = (bundle["HR"] / baseline["HR"]) - 1;
 	var K = (bundle["K"] / baseline["K"]) - 1;
 
-	data.addRows([["HR", HR], ["K", K]]);
+	data.addRows([["Home Run", HR], ["Strikeout", K]]);
 
 	var max = 1.4999999999; // just shy of 150%
 	var minVal = Math.min(HR, K, -1*max);
@@ -25,10 +48,10 @@ function drawChart(baseline, bundle) {
 	var gridlines = 13 + 2 * Math.max(Math.ceil((maxVal/max) - 1), Math.ceil((-1*minVal/max) - 1));
 
 	var options = {"vAxis": {format:"###%", minValue: minVal, maxValue: maxVal, gridlines: {count: gridlines}},
-				   "legend": {position:"none"}};
+				   "legend": {position:"none"},
+				   "title": "Correlation Index"};
 
 	var chart = new google.visualization.ColumnChart($("#column_chart")[0]);
-	$("#results").show();
 	chart.draw(data, options);
 }
 
@@ -177,7 +200,9 @@ function submitQuery() {
 	$.getJSON("/cmd?type=predict",
 			  query,
 			  function(data) {
-				  drawChart(data["baseline"], data["bundle"]);
+				  $("#results").show();
+				  drawPieCharts(data["baseline"], data["bundle"]);
+				  drawColumnChart(data["baseline"], data["bundle"]);
 			  });
 }
 

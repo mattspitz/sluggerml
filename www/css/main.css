@@ -8,7 +8,8 @@ a {
 }
 
 #userinput {
-	width: 600px;
+	width: 450px;
+	float: left;
 }
 
 #userinput .adder {
@@ -37,9 +38,18 @@ a {
 
 #results {
 	display: none;
+	text-align: center;
+	float: left;
+}
+
+#baseline_chart,
+#features_chart  {
+	display: inline-block;
+	width: 400px;
 }
 
 #column_chart {
+	display: inline-block;
 	width: 600px;
 	height: 400px;
 }
