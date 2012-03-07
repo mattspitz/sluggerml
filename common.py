@@ -303,7 +303,7 @@ class TrainingDatum(object):
         return obj
 
     def __str__(self):
-        return "<TrainingDatum: %s>" % ", ".join([ "%s=%s" % (k, getattr(self, k)) for k in sorted(self.__slots__) ])
+        return "<TrainingDatum: %s>" % ", ".join([ "%s=%s" % (k, getattr(self, k)) for k in sorted(self.__slots__) if hasattr(self, k)])
 
     def to_json(self):
         return json.dumps(dict([ (slot, getattr(self,slot)) for slot in self.__slots__ ]))
