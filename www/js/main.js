@@ -13,14 +13,18 @@ function drawChart(baseline, bundle) {
 
 	data.addRows([["HR", HR], ["K", K]]);
 
-	var minVal = Math.min(HR, K, -1);
-	var maxVal = Math.max(HR, K, 1);
+	var max = 1.4999999999; // just shy of 150%
+	var minVal = Math.min(HR, K, -1*max);
+	var maxVal = Math.max(HR, K, max);
 
-	/* TODO how do we make it fit in the gridlines? */
-	minVal = Math.min(minVal, -1*maxVal);
-	maxVal = Math.max(maxVal, -1*minVal);
+	/* stretch equally far in each direction */
+	minVal = Math.min(-1*maxVal, minVal);
+	maxVal = Math.max(-1*minVal, maxVal);
 
-	var options = {"vAxis": {format:"###%", minValue: minVal, maxValue: maxVal},
+	/* make sure the number of gridlines matches with our stretch */
+	var gridlines = 13 + 2 * Math.max(Math.ceil((maxVal/max) - 1), Math.ceil((-1*minVal/max) - 1));
+
+	var options = {"vAxis": {format:"###%", minValue: minVal, maxValue: maxVal, gridlines: {count: gridlines}},
 				   "legend": {position:"none"}};
 
 	var chart = new google.visualization.ColumnChart($("#column_chart")[0]);
