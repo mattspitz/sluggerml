@@ -40,6 +40,13 @@ def predict_bundle(args, post_data):
     # this is a silly hack because qs args are coming through to the post data and I'm too lazy to figure out why
     d = dict( (k, post_data[k].value) for k in post_data if k != "type" )
 
+    for k in d.keys():
+        try:
+            # gah, this is so gross; stupid post args not being ints and I'm running out of time.  PyCon is Friday!
+            d[k] = int(d[k])
+        except ValueError:
+            pass
+
     response = {"bundle": {},
                 "baseline": {}}
     probdist = CLASSIFIER.prob_classify(d)
