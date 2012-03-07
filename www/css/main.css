@@ -7,6 +7,10 @@ a {
 	padding-bottom: 10px;
 }
 
+#userinput {
+	width: 600px;
+}
+
 #userinput .adder {
 	padding-bottom: 5px;
 }
@@ -29,4 +33,13 @@ a {
 
 #userinput select.value {
 	width: 100px;
+}
+
+#results {
+	display: none;
+}
+
+#column_chart {
+	width: 600px;
+	height: 400px;
 }

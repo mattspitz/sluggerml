@@ -2,6 +2,32 @@ $(function() {
 	setupInputs();
 });
 
+function drawChart(baseline, bundle) {
+	var data = new google.visualization.DataTable();
+
+	data.addColumn("string", "Label");
+	data.addColumn("number", "Correlation");
+
+	var HR = (bundle["HR"] / baseline["HR"]) - 1;
+	var K = (bundle["K"] / baseline["K"]) - 1;
+
+	data.addRows([["HR", HR], ["K", K]]);
+
+	var minVal = Math.min(HR, K, -1);
+	var maxVal = Math.max(HR, K, 1);
+
+	/* TODO how do we make it fit in the gridlines? */
+	minVal = Math.min(minVal, -1*maxVal);
+	maxVal = Math.max(maxVal, -1*minVal);
+
+	var options = {"vAxis": {format:"###%", minValue: minVal, maxValue: maxVal},
+				   "legend": {position:"none"}};
+
+	var chart = new google.visualization.ColumnChart($("#column_chart")[0]);
+	$("#results").show();
+	chart.draw(data, options);
+}
+
 function addFeatureSelector(allFeatures) {
 	var groupDisplay = {"game": "Game",
 						"ab": "At-Bat",
@@ -19,7 +45,7 @@ function addFeatureSelector(allFeatures) {
 		"game_year": "Game: Year",
 
 		"ab_inning": "Inning",
-		"ab_lrmatchup": "Lefty-righty Matchup",
+		"ab_lrmatchup": "Lefty-Righty Matchup",
 		"ab_numballs": "Number of Balls",
 		"ab_numstrikes": "Number of Strikes",
 
@@ -147,8 +173,7 @@ function submitQuery() {
 	$.getJSON("/cmd?type=predict",
 			  query,
 			  function(data) {
-				  console.log("response", data);
-				  /* TODO draw stuff */
+				  drawChart(data["baseline"], data["bundle"]);
 			  });
 }
 
