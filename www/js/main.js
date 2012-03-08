@@ -36,7 +36,7 @@ function drawColumnChart(baseline, bundle) {
 
 	data.addRows([["Home Run", HR], ["Strikeout", K]]);
 
-	var max = 1.4999999999; // just shy of 150%
+	var max = 0.4999999999; // just shy of 50%
 	var minVal = Math.min(HR, K, -1*max);
 	var maxVal = Math.max(HR, K, max);
 
@@ -45,7 +45,7 @@ function drawColumnChart(baseline, bundle) {
 	maxVal = Math.max(-1*minVal, maxVal);
 
 	/* make sure the number of gridlines matches with our stretch */
-	var gridlines = 13 + 2 * Math.max(Math.ceil((maxVal/max) - 1), Math.ceil((-1*minVal/max) - 1));
+	var gridlines = 5 + 2 * Math.max(Math.ceil((maxVal/max) - 1), Math.ceil((-1*minVal/max) - 1));
 
 	var options = {"vAxis": {format:"###%", minValue: minVal, maxValue: maxVal, gridlines: {count: gridlines}},
 				   "legend": {position:"none"},
